@@ -1,0 +1,90 @@
+IF DB_ID('SchoolTeams') IS NULL
+	CREATE DATABASE SchoolTeams;
+
+USE SchoolTeams; 
+
+GO
+
+IF SCHEMA_ID('Admin') IS NULL
+BEGIN
+	EXEC ('CREATE SCHEMA Admin AUTHORIZATION dbo')
+END;
+
+GO
+
+IF OBJECT_ID('Admin.Permission') IS NOT NULL
+   DROP TABLE Admin.Permission;
+
+IF OBJECT_ID('Admin.Parent') IS NOT NULL
+   DROP TABLE Admin.Parent;
+
+IF OBJECT_ID('Admin.Player') IS NOT NULL
+   DROP TABLE Admin.Player;
+
+IF OBJECT_ID('Admin.Team') IS NOT NULL
+   DROP TABLE Admin.Team;
+
+CREATE TABLE Admin.Team
+( Team_ID	INT		NOT NULL	PRIMARY KEY  IDENTITY,
+  Team_Name VARCHAR(20)	NOT NULL,
+  UNIQUE(Team_Name)
+);
+
+CREATE TABLE Admin.Player
+( Player_ID			INT			NOT NULL,
+  Player_First_Name VARCHAR(20)	NOT NULL,
+  Player_Last_Name	VARCHAR(20)	NOT NULL,
+  Team_ID			INT			NULL	DEFAULT(1),
+  PRIMARY KEY(Player_ID),
+  CONSTRAINT FK_Player_Team FOREIGN KEY(Team_ID) REFERENCES Admin.Team(Team_ID),
+  CONSTRAINT PlayerID_Positive CHECK(Player_ID > 0)
+);
+
+CREATE TABLE Admin.Parent
+( Parent_ID			INT			NOT NULL,
+  Parent_First_Name VARCHAR(20)	NOT NULL,
+  Parent_Last_Name	VARCHAR(20)	NOT NULL,
+  PRIMARY KEY(Parent_ID),
+  CONSTRAINT ParentID_Positive CHECK(Parent_ID > 0)
+);
+
+CREATE TABLE Admin.Permission
+( Player_ID	INT		NOT NULL,
+  Parent_ID INT		NOT NULL,
+  PRIMARY KEY(Player_ID, Parent_ID),
+  FOREIGN KEY(Player_ID) REFERENCES Admin.Player,
+  FOREIGN KEY(Parent_ID) REFERENCES Admin.Parent(Parent_ID)
+);
+GO
+
+INSERT INTO Admin.Team VALUES('Storm');
+INSERT INTO Admin.Team VALUES('Stormy');
+INSERT INTO Admin.Team VALUES('Eagles');
+INSERT INTO Admin.Team VALUES('Falcons');
+
+INSERT INTO Admin.Player(Player_ID, Player_First_Name, Player_Last_Name, Team_ID)
+				  VALUES(1, 'Jerry', 'Attrick', 3);
+INSERT INTO Admin.Player(Player_ID, Player_First_Name, Player_Last_Name)
+				  VALUES(2, 'Rose',	'Bush');
+INSERT INTO Admin.Player(Player_ID, Player_First_Name, Player_Last_Name, Team_ID)
+				  VALUES(3, 'Nully','Null', NULL);
+INSERT INTO Admin.Player(Player_ID, Player_First_Name, Player_Last_Name, Team_ID)
+				  VALUES(10, 'Negative','Person', 2);
+INSERT INTO Admin.Player(Player_ID, Player_First_Name, Player_Last_Name, Team_ID)
+				  VALUES(4, 'Tommy', 'Gunn', 3);
+
+INSERT INTO Admin.Parent VALUES(1, 'Rosie', 'Shrub');
+INSERT INTO Admin.Parent VALUES(2, 'Hog', 'Hedge');
+
+INSERT INTO Admin.Permission(Player_ID, Parent_ID) VALUES(2, 1);
+
+GO
+
+SELECT P.Player_First_Name, P.Player_Last_Name
+FROM Admin.Team AS T JOIN Admin.Player AS P
+	ON T.Team_ID = P.Team_ID AND T.Team_Name = 'Eagles';
+
+SELECT P.Player_First_Name, P.Player_Last_Name
+FROM Admin.Team AS T JOIN Admin.Player AS P
+	ON T.Team_ID = P.Team_ID 
+WHERE T.Team_Name = 'Eagles';
